@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="俯卧撑">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <title>俯卧撑记录</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --green: #10b981;
+            --green-dark: #059669;
+            --danger: #ef4444;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: 16px;
+            padding-bottom: 100px;
+        }
+
+        .app-header {
+            text-align: center;
+            padding: 20px 0 16px;
+        }
+        .app-header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        /* ── 快速录入卡片 ── */
+        .quick-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .quick-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .quick-row input {
+            flex: 1;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 18px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .quick-row input:focus { border-color: var(--primary); }
+        .btn-add {
+            padding: 14px 20px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.15s;
+        }
+        .btn-add:active { background: var(--primary-dark); }
+
+        /* ── 统计卡片 ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .stat-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 14px 10px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+        .stat-value { font-size: 22px; font-weight: 700; color: var(--primary); }
+
+        /* ── 导出 ── */
+        .export-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .export-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .export-row span { font-size: 13px; color: var(--muted); white-space: nowrap; }
+        .export-row input[type="date"] {
+            padding: 10px 12px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            flex: 1;
+            min-width: 110px;
+        }
+        .export-row input[type="date"]:focus { border-color: var(--primary); }
+        .btn-export {
+            padding: 10px 18px;
+            background: var(--green);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.15s;
+        }
+        .btn-export:active { background: var(--green-dark); }
+
+        /* ── 记录列表 ── */
+        .list-card {
+            background: var(--card);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .record-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+        }
+        .record-item:last-child { border-bottom: none; }
+        .record-left { display: flex; align-items: baseline; gap: 8px; }
+        .record-count { font-size: 20px; font-weight: 700; }
+        .record-unit { font-size: 13px; color: var(--muted); }
+        .record-right { display: flex; align-items: center; gap: 12px; }
+        .record-time { font-size: 12px; color: var(--muted); text-align: right; line-height: 1.3; }
+        .btn-del {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+        .btn-del:active { background: #fee2e2; color: var(--danger); }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.8;
+        }
+        .empty-state .emoji { font-size: 40px; display: block; margin-bottom: 10px; }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            background: #1f2937; color: #fff;
+            padding: 12px 24px; border-radius: 10px;
+            font-size: 14px; font-weight: 500;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .toast.visible { opacity: 1; }
+    </style>
+</head>
+<body>
+
+<header class="app-header">
+    <h1>俯卧撑记录</h1>
+</header>
+
+<!-- 录入 -->
+<div class="quick-card">
+    <div class="quick-row">
+        <input type="number" id="pushupCount" placeholder="这次做了几个？" min="1" step="1" inputmode="numeric" autofocus>
+        <button class="btn-add" onclick="addRecord()">记录</button>
+    </div>
+</div>
+
+<!-- 统计 -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-label">总次数</div>
+        <div class="stat-value" id="statTotal">0</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">训练天数</div>
+        <div class="stat-value" id="statDays">0</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">日均</div>
+        <div class="stat-value" id="statAvg">0</div>
+    </div>
+</div>
+
+<!-- 导出 -->
+<div class="export-card">
+    <div class="export-row">
+        <span>导出范围</span>
+        <input type="date" id="startDate" title="开始日期">
+        <span>—</span>
+        <input type="date" id="endDate" title="结束日期">
+        <button class="btn-export" onclick="exportData()">导出 CSV</button>
+    </div>
+</div>
+
+<!-- 记录列表 -->
+<div class="list-card" id="listCard">
+    <div class="empty-state" id="emptyState">
+        <span class="emoji">💪</span>
+        还没记录<br>开始你的第一次俯卧撑吧
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const DB = "PushupDB", STORE = "records";
+    let db, records = [];
+
+    function initDB() {
+        const r = indexedDB.open(DB, 1);
+        r.onerror = () => {};
+        r.onupgradeneeded = e => {
+            const d = e.target.result;
+            if (!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE, { keyPath: "id" });
+        };
+        r.onsuccess = e => { db = e.target.result; loadRecords(); };
+    }
+
+    function loadRecords() {
+        const tx = db.transaction([STORE], "readonly");
+        tx.objectStore(STORE).getAll().onsuccess = e => {
+            records = e.target.result.sort((a, b) => a.id - b.id);
+            render();
+        };
+    }
+
+    function addRecord() {
+        const inp = document.getElementById("pushupCount");
+        const n = parseInt(inp.value);
+        if (isNaN(n) || n < 1) return toast("请输入有效次数");
+
+        const rec = { id: Date.now(), count: n };
+        const tx = db.transaction([STORE], "readwrite");
+        tx.objectStore(STORE).add(rec).onsuccess = () => {
+            inp.value = "";
+            records.push(rec);
+            render();
+            toast("已记录 " + n + " 次");
+        };
+        tx.onerror = () => toast("保存失败");
+    }
+
+    function deleteRecord(id) {
+        const tx = db.transaction([STORE], "readwrite");
+        tx.objectStore(STORE).delete(id).onsuccess = () => {
+            records = records.filter(r => r.id !== id);
+            render();
+            toast("已删除");
+        };
+    }
+
+    function render() {
+        const listCard = document.getElementById("listCard");
+        listCard.querySelectorAll(".record-item").forEach(el => el.remove());
+        const empty = document.getElementById("emptyState");
+
+        let total = 0;
+        const days = new Set();
+        records.forEach(r => {
+            total += r.count;
+            days.add(new Date(r.id).toDateString());
+        });
+
+        document.getElementById("statTotal").textContent = total;
+        document.getElementById("statDays").textContent = days.size;
+        document.getElementById("statAvg").textContent = days.size ? Math.round(total / days.size) : 0;
+
+        if (records.length === 0) {
+            empty.style.display = "block";
+            return;
+        }
+        empty.style.display = "none";
+
+        const frag = document.createDocumentFragment();
+        for (let i = records.length - 1; i >= 0; i--) {
+            const r = records[i];
+            const el = document.createElement("div");
+            el.className = "record-item";
+            const d = new Date(r.id);
+            const dateStr = d.getFullYear() + "-" +
+                String(d.getMonth() + 1).padStart(2, "0") + "-" +
+                String(d.getDate()).padStart(2, "0");
+            const timeStr = String(d.getHours()).padStart(2, "0") + ":" +
+                String(d.getMinutes()).padStart(2, "0");
+            el.innerHTML = '<div class="record-left"><span class="record-count">' + r.count +
+                '</span><span class="record-unit">次</span></div>' +
+                '<div class="record-right"><span class="record-time">' + dateStr +
+                '<br>' + timeStr + '</span>' +
+                '<button class="btn-del" data-id="' + r.id + '" aria-label="删除">×</button></div>';
+            frag.appendChild(el);
+        }
+        listCard.appendChild(frag);
+
+        listCard.querySelectorAll(".btn-del").forEach(btn => {
+            btn.addEventListener("click", function () {
+                deleteRecord(Number(this.dataset.id));
+            });
+        });
+    }
+
+    function exportData() {
+        if (!records.length) return toast("没有可导出的数据");
+        let data = records;
+        const start = document.getElementById("startDate").value;
+        const end = document.getElementById("endDate").value;
+        if (start) data = data.filter(r => r.id >= new Date(start + "T00:00:00").getTime());
+        if (end) data = data.filter(r => r.id <= new Date(end + "T23:59:59").getTime());
+        if (!data.length) return toast("所选时间段内没有记录");
+
+        function fmt(ts) {
+            const d = new Date(ts);
+            return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" +
+                String(d.getDate()).padStart(2,"0") + " " +
+                String(d.getHours()).padStart(2,"0") + ":" +
+                String(d.getMinutes()).padStart(2,"0") + ":" +
+                String(d.getSeconds()).padStart(2,"0");
+        }
+
+        let csv = "﻿序号,次数,时间\n";
+        data.forEach((r, i) => { csv += (i + 1) + "," + r.count + "," + fmt(r.id) + "\n"; });
+
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "俯卧撑_" + fmt(Date.now()).split(" ")[0] + ".csv";
+        a.click();
+        toast("已导出 " + data.length + " 条记录");
+    }
+
+    let toastTimer;
+    function toast(msg) {
+        const el = document.getElementById("toast");
+        el.textContent = msg;
+        el.classList.add("visible");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove("visible"), 1800);
+    }
+
+    // 回车键快速记录
+    document.getElementById("pushupCount").addEventListener("keydown", function (e) {
+        if (e.key === "Enter") addRecord();
+    });
+
+    // 注册 Service Worker
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("sw.js").catch(() => {});
+    }
+
+    window.onload = initDB;
+</script>
+</body>
+</html>
