@@ -1,0 +1,13 @@
+{
+  "background_color": "#3f3d3d",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "俯卧撑记录",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "俯卧撑记录",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "id": "wewewe",
+  "description": "记录俯卧撑工具"
+}
